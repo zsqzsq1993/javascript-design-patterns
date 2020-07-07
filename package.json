@@ -1,0 +1,35 @@
+{
+  "name": "javascript-design-patterns",
+  "version": "1.0.0",
+  "description": "Learning notes of JavaScript design patterns ",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node examples/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/zsqzsq1993/javascript-design-patterns.git"
+  },
+  "keywords": [
+    "JavaScript",
+    "design patterns"
+  ],
+  "author": "Dolly Zhang",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zsqzsq1993/javascript-design-patterns/issues"
+  },
+  "homepage": "https://github.com/zsqzsq1993/javascript-design-patterns#readme",
+  "devDependencies": {
+    "@babel/core": "^7.10.2",
+    "@babel/plugin-proposal-class-properties": "^7.10.1",
+    "@babel/preset-env": "^7.10.2",
+    "@types/express": "^4.17.7",
+    "@types/webpack": "^4.41.20",
+    "babel-loader": "^8.1.0",
+    "express": "^4.17.1",
+    "webpack": "^4.43.0",
+    "webpack-dev-middleware": "^3.7.2",
+    "webpack-hot-middleware": "^2.25.0"
+  }
+}
