@@ -142,4 +142,82 @@ function command2() {
     setCommand(command)
 }
 
-command2()
+function isFunc() {
+    const type = (function () {
+        const Type = {}
+        for(let type of ['Array', 'Number', 'String']) {
+            Type[`is${type}`] = function (obj) {
+                return Object.prototype.toString.call(obj) === `[object ${type}]`
+            }
+        }
+        return Type
+    })()
+
+    console.log(
+        type.isArray([1,2,3]),
+        type.isNumber(123),
+        type.isString('123')
+    )
+}
+
+function AOP() {
+    Function.prototype.before = function (fn) {
+        const self = this
+        return function () {
+            let args = fn.apply(this, arguments)
+            return self.apply(this, args)
+        }
+    }
+
+    Function.prototype.after = function (fn) {
+        const self = this
+        return function () {
+            const ret = self.apply(this, arguments)
+            return fn.call(this, ret)
+        }
+    }
+
+    let func = function (a, b) {
+        return a*b
+    }
+
+    func = func.before((a,b) => {
+        a = Math.floor(a)
+        b = Math.floor(b)
+        return [a, b]
+    }).after(ret => {
+        return ret*10
+    })
+
+    console.log(func(2.1, 3.4)) // 60
+}
+
+function add() {
+    const cost = (function () {
+        let total = 0
+        return function () {
+            for(let i=0, len=arguments.length; i < len; i++) {
+                total += arguments[i]
+            }
+            return total
+        }
+    })()
+
+    console.log(
+        cost(100), // 100
+        cost(100, 200), // 400
+        cost(300) // 700
+    )
+
+    const currying = function (fn) {
+        const args = []
+        return function () {
+            if (arguments.length) {
+                [].concat.apply(args, arguments)
+            } else {
+                fn.apply(this, fn)
+            }
+        }
+    }
+}
+

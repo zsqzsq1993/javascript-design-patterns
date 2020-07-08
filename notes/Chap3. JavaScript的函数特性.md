@@ -4,7 +4,7 @@ JS是一门面向对象的语言，但它仍有许多函数式编程语言的特
 
 ## 闭包
 
-### 我对闭包概念的理解
+### 我对闭包的理解
 
 闭包到底是什么？是函数？是作用域？是活动对象？还是生命周期？我认为以上都不是。闭包之所以抽象是因为它无法用上述单个概念进行解释。闭包应该是一种结构，一种保存（封闭）了本应被销毁的局部变量的结构。
 
@@ -198,7 +198,94 @@ setCommand(command)
 
 ## 高阶函数
 
+### 什么是高阶函数
 
+满足以下特性之一的，被称为高阶函数（High-order function）：
+
+* 接收一个或者多个函数作为参数
+* 输出一个函数
+
+接收函数作为参数的情况一般有：作为回调函数（callback）传入、作为sort函数的比较函数传入等情况。闭包的结构一般都需要一个函数作为输出。以下是一个利用闭包，为一个对象批量注册数据类型判断函数的例子。
+
+```javascript
+const type = (function () {
+  const Type = {}
+  for(let type of ['Array', 'Number', 'String']) {
+    Type[`is${type}`] = function (obj) {
+      return Object.prototype.toString.call(obj) === `[object ${type}]`
+    }
+  }
+  return Type
+})()
+
+console.log(
+  type.isArray([1,2,3]),
+  type.isNumber(123),
+  type.isString('123')
+)
+```
+
+### 高阶函数实现AOP
+
+AOP（面向切面编程）是指将跟核心业务逻辑无关的功能抽离出来。再通过动态织入的方式将其插入核心业务逻辑的模块中。这样做的好处是，核心业务逻辑模块（以及抽离出来的模块）都有较高的纯净度和聚合度，便于维护。这样编织的库，拓展性也更好。
+
+下面是一个简单的高阶函数实现AOP的例子。函数会在处理核心乘法逻辑之前，自动去除参数的小树部分，在返回乘积后自动进行10倍放大。
+
+```javascript
+Function.prototype.before = function (fn) {
+  const self = this
+  return function () {
+    let args = fn.apply(this, arguments)
+    return self.apply(this, args)
+  }
+}
+
+Function.prototype.after = function (fn) {
+  const self = this
+  return function () {
+    const ret = self.apply(this, arguments)
+    return fn.call(this, ret)
+  }
+}
+
+let func = function (a, b) {
+  return a*b
+}
+
+func = func.before((a,b) => {
+  a = Math.floor(a)
+  b = Math.floor(b)
+  return [a, b]
+}).after(ret => {
+  return ret*10
+})
+
+console.log(func(2.1, 3.4)) 
+```
+
+### 高阶函数实现函数柯里化
+
+柯里化（currying）又称为部分求值。多次调用函数，函数在接收参数后并不会马上求值，而是将参数在函数形成的闭包中保存起来。待最后一次调用，对前面保存的参数一次性求值。下方的函数用于对费用进行累加。每调用一次cost，便会进行一次求值。
+
+```javascript
+const cost = (function () {
+  let total = 0
+  return function () {
+    for(let i=0, len=arguments.length; i < len; i++) {
+      total += arguments[i]
+    }
+    return total
+  }
+})()
+
+console.log(
+  cost(100), // 100
+  cost(100, 200), // 400
+  cost(300) // 700
+)
+```
+
+我们可以通过currying这个通用函数来对函数进行柯里化：
 
 
 
