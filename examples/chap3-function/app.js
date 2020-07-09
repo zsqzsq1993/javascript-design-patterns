@@ -193,7 +193,19 @@ function AOP() {
 }
 
 function add() {
-    const cost = (function () {
+    const currying = function (fn) {
+        const args = []
+        return function () {
+            if (arguments.length) {
+                [].push.apply(args, arguments)
+                // return arguments.callee
+            } else {
+                return fn.apply(this, args)
+            }
+        }
+    }
+
+    let cost = (function () {
         let total = 0
         return function () {
             for(let i=0, len=arguments.length; i < len; i++) {
@@ -203,21 +215,14 @@ function add() {
         }
     })()
 
-    console.log(
-        cost(100), // 100
-        cost(100, 200), // 400
-        cost(300) // 700
-    )
+    cost = currying(cost)
 
-    const currying = function (fn) {
-        const args = []
-        return function () {
-            if (arguments.length) {
-                [].concat.apply(args, arguments)
-            } else {
-                fn.apply(this, fn)
-            }
-        }
-    }
+    console.log(
+        cost(100), // undefined
+        cost(100, 200), // undefined
+        cost(300), // undefined
+        cost() // 700
+    )
 }
 
+add()

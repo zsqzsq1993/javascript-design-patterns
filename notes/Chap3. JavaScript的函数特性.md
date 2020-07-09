@@ -285,7 +285,30 @@ console.log(
 )
 ```
 
-我们可以通过currying这个通用函数来对函数进行柯里化：
+我们可以通过currying这个通用函数来对其他函数进行柯里化：
 
+```javascript
+const currying = function (fn) {
+  const args = []
+  return function () {
+    if (arguments.length) {
+      [].push.apply(args, arguments)
+      // return arguments.callee
+    } else {
+      return fn.apply(this, args)
+    }
+  }
+}
+```
 
+经过currying后会返回一个新函数，当给这个函数传参时，参数只会被储存；当不给函数传参，函数会被立即执行。
+
+``` javascript
+console.log(
+  cost(100), // undefined
+  cost(100, 200), // undefined
+  cost(300), // undefined
+  cost() // 700
+)
+```
 
