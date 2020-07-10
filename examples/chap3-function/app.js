@@ -225,4 +225,78 @@ function add() {
     )
 }
 
-add()
+function uncurryingPush() {
+    Function.prototype.uncurrying = function () {
+        const origin = this
+        return function () {
+            const obj = [].shift.call(arguments)
+            return origin.apply(obj, arguments)
+        }
+    }
+
+    Function.prototype.uncurrying2 = function () {
+        const origin = this
+        return function () {
+            return Function.prototype.call.apply(origin, arguments)
+        }
+    }
+
+    const obj = {
+        "0": "h",
+        "1": "e",
+        "2": "l",
+        "3": "l",
+        "4": "o",
+        length: 5
+    }
+
+    for(let key of ['push', 'shift', 'forEach']) {
+        Array[key] = Array.prototype[key].uncurrying2()
+    }
+
+    Array.push(obj, "l")
+    Array.shift(obj)
+    Array.forEach(obj, (val, key) => {
+        console.log(val) // ellol
+    })
+
+    console.log(obj.length)// 5
+}
+
+function throttleForMousemove() {
+    function throttle(fn, interval) {
+        if (!fn) {
+            throw new Error('You have to insert a function')
+        }
+        const default_interval = 500
+        let firstTimer = true
+        let timer = null
+        return function () {
+            const self = this
+            const args = arguments
+            if (firstTimer) {
+                firstTimer = false
+                return fn.apply(this, arguments)
+            }
+            if (timer) {
+                return false
+            }
+            timer = setTimeout(() => {
+                const val = fn.apply(self, args)
+                clearTimeout(timer)
+                timer = null
+                return val
+            }, interval || default_interval)
+        }
+    }
+
+    const func = (function () {
+        let count = 0
+        return function (event) {
+            console.log(event.type)
+        }
+    })()
+
+    document.onmousemove = throttle(func, 2000)
+}
+throttleForMousemove()

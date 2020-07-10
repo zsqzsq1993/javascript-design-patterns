@@ -312,3 +312,99 @@ console.log(
 )
 ```
 
+### 高阶函数实现uncurrying
+
+我们经常会通过`Function.prototype.apply`和`Function.prototype.call`来为类数组调用数组的一些方法，比如：
+
+```javascript
+Array.prototype.push.call(obj,1)
+```
+
+我们可以通过构造uncurrying函数来使push以更常规的方式来被调用，比如：
+
+```javascript
+const push = Array.prototype.push.uncurrying()
+push(obj, 1)
+```
+
+uncurrying函数构造如下，也可以使用uncurrying2的构造方式来进行简化。
+
+```javascript
+Function.prototype.uncurrying = function () {
+  const origin = this
+  return function () {
+    const obj = [].shift.call(arguments)
+    return origin.apply(obj, arguments)
+  }
+}
+
+Function.prototype.uncurrying2 = function () {
+  const origin = this
+  return function () {
+    return Function.prototype.call.apply(origin, arguments)
+  }
+}
+
+const obj = {
+  "0": "h",
+  "1": "e",
+  "2": "l",
+  "3": "l",
+  "4": "o",
+  length: 5
+}
+
+for(let key of ['push', 'shift', 'forEach']) {
+  Array[key] = Array.prototype[key].uncurrying2()
+}
+
+Array.push(obj, "l")
+Array.shift(obj)
+Array.forEach(obj, (val, key) => {
+  console.log(val) // ellol
+})
+
+console.log(obj.length)// 5
+```
+
+### 函数节流
+
+函数节流常运用在事件处理函数上。类似`resize`, `mousemove`,`touchmove`等事件的事件处理函数在业务逻辑中很可能会频繁地触发。如果这类事件处理函数中含有处理dom的逻辑，会对整体性能造成非常大的影响。通过函数节流，我们希望将这类事件处理函数由每秒触发10次降低至每秒触发1次或其他自定义的次数。这可以通过闭包及setTimeout来实现。
+
+```javascript
+function throttle(fn, interval) {
+  if (!fn) {
+    throw new Error('You have to insert a function')
+  }
+  const default_interval = 500
+  let firstTimer = true
+  let timer = null
+  return function () {
+    const self = this
+    const args = arguments
+    if (firstTimer) {
+      firstTimer = false
+      return fn.apply(this, arguments)
+    }
+    if (timer) {
+      return false
+    }
+    timer = setTimeout(() => {
+      const val = fn.apply(self, args)
+      clearTimeout(timer)
+      timer = null
+      return val
+    }, interval || default_interval)
+  }
+}
+
+const func = (function () {
+  let count = 0
+  return function (event) {
+    console.log(event.type)
+  }
+})()
+
+document.onmousemove = throttle(func, 2000)
+```
+
