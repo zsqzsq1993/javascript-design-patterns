@@ -299,4 +299,57 @@ function throttleForMousemove() {
 
     document.onmousemove = throttle(func, 2000)
 }
-throttleForMousemove()
+
+function createDom() {
+    const data = (function () {
+        const tempt = Array()
+        for (let i=0; i < 1000; i++) {
+            tempt.push(i)
+        }
+        return tempt
+    })()
+
+    function timeChunck(data, fn, count, interval) {
+        const start = function () {
+            for(
+                let i=0, len= Math.min(count || 1, data.length);
+                i < len;
+                i++ ) {
+                const val = data.shift()
+                fn(val)
+            }
+        }
+        return function () {
+            const t = setInterval(() => {
+                if (!data.length) {
+                    return clearInterval(t)
+                }
+                start()
+            }, interval || 200)
+        }
+    }
+
+    function func(obj) {
+        const div = document.createElement('div')
+        div.innerText = obj
+        document.body.appendChild(div)
+    }
+
+    const createElement = timeChunck(data, func, 8, 200)
+    createElement()
+}
+
+function lazyLoad() {
+    function addEvent(ele, type, callback) {
+        if (window.addEventListener) {
+            addEvent = function (ele, type, callback) {
+                ele.addEventListener(type, callback, false)
+            }
+        } else if (window.attachEvent) {
+            addEvent = function (ele, type, callback) {
+                ele.attachEvent(`on${type}`, callback)
+            }
+        }
+        addEvent()
+    }
+}

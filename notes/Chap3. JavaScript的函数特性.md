@@ -369,7 +369,7 @@ console.log(obj.length)// 5
 
 ### 函数节流
 
-函数节流常运用在事件处理函数上。类似`resize`, `mousemove`,`touchmove`等事件的事件处理函数在业务逻辑中很可能会频繁地触发。如果这类事件处理函数中含有处理dom的逻辑，会对整体性能造成非常大的影响。通过函数节流，我们希望将这类事件处理函数由每秒触发10次降低至每秒触发1次或其他自定义的次数。这可以通过闭包及setTimeout来实现。
+函数节流常运用在事件处理函数上。类似`resize`, `mousemove`,`touchmove`等事件的事件处理函数在业务逻辑中很可能会频繁地触发。如果这类事件处理函数中含有处理dom的逻辑，会对整体性能造成非常大的影响。通过函数节流，我们希望将这类事件处理函数由每秒触发10次降低至每秒触发1次或其他自定义的次数。这可以通过闭包及setTimeout来实现。在闭包中储存有是否为第一次调用、setTimeout的timer等信息。每一次调用返回的匿名函数将会对这些信息进行判断，执行不同的逻辑。
 
 ```javascript
 function throttle(fn, interval) {
@@ -406,5 +406,77 @@ const func = (function () {
 })()
 
 document.onmousemove = throttle(func, 2000)
+```
+
+#### 分时函数
+
+分时函数的思想和函数节流很像，是利用闭包和setInterval来实现的。作用可以是，延长批量创造dom节点的时间。以避免浏览器短时间内性能下降或出现假死。当然，我并不觉得这是一个非常好的例子，因为在这里闭包或者说高阶函数并未发挥出它的优势，并不是非用它们不可。倒是在函数节流中，闭包是非常好的选择。
+
+```javascript
+const data = (function () {
+  const tempt = Array()
+  for (let i=0; i < 1000; i++) {
+    tempt.push(i)
+  }
+  return tempt
+})()
+
+function timeChunck(data, fn, count, interval) {
+  const start = function () {
+    for(
+      let i=0, len= Math.min(count || 1, data.length);
+      i < len;
+      i++ ) {
+      const val = data.shift()
+      fn(val)
+    }
+  }
+  return function () {
+    const t = setInterval(() => {
+      if (!data.length) {
+        return clearInterval(t)
+      }
+      start()
+    }, interval || 200)
+    }
+}
+
+function func(obj) {
+  const div = document.createElement('div')
+  div.innerText = obj
+  document.body.appendChild(div)
+}
+
+const createElement = timeChunck(data, func, 8, 200)
+createElement()
+```
+
+### 惰性加载函数
+
+惰性加载函数在我的理解是：函数在第一次执行时进行某些判断逻辑后，在函数体内对该函数进行重写。之后都将会执行计算开支较小的新函数。大概格式为：
+
+```javascript
+function todo(val) {
+  if (val > 0) {
+    todo = function() {
+      // do Something
+    }
+  }
+}
+```
+
+```javascript
+function addEvent(ele, type, callback) {
+  if (window.addEventListener) {
+    addEvent = function (ele, type, callback) {
+      ele.addEventListener(type, callback, false)
+    }
+  } else if (window.attachEvent) {
+    addEvent = function (ele, type, callback) {
+      ele.attachEvent(`on${type}`, callback)
+    }
+  }
+  addEvent()
+}
 ```
 
