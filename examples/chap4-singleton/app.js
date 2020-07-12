@@ -61,6 +61,7 @@ function testBasicSingleton(Singleton) {
     const obj1 = Singleton.getInstance('Jack')
     const obj2 = Singleton.getInstance('Tom')
     console.log(obj1 === obj2) // true
+    console.log(Singleton.instance === obj1)// true
     obj1.sayName() // Jack
     obj2.sayName() // Jack
     console.log(obj1.instance) // undefined
@@ -117,4 +118,37 @@ function myThink() {
     console.log(div2.html)
 }
 
-myThink()
+function proxy() {
+    class CreateElement {
+        constructor(html, text) {
+            this.html = html
+            this.text = text
+            this.init()
+        }
+
+        init() {
+            const div = document.createElement('div')
+            div.innerText = this.html
+            document.body.appendChild(div)
+        }
+    }
+
+    const ProxySingleton = function (fn) {
+        let instance = null
+        return function (...args) {
+            if (!instance) {
+                instance = new fn(...args)
+            }
+            return instance
+        }
+    }
+
+    const ProxyCreateElement = ProxySingleton(CreateElement)
+
+    const obj1 = new ProxyCreateElement('hello', 'world')
+    const obj2 = new ProxyCreateElement('hi', 'ocean')
+    console.log(obj1 === obj2)
+    console.log(obj1.html, obj2.text)
+}
+
+proxy()
