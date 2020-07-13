@@ -158,4 +158,118 @@ console.log(div2.html)
 
 ### 坚持单一职责原则
 
-上面更通用的方式中
+上面更通用的方式中构造函数其实担当了两个职责，一个是正常地初始化实例对象；一个是保证单一实例。这并不符合单一职责的原则。将来想要创建别的对象的单一实例，也需要重写类似代码，并不利于维护。能否将两个职责分开，构造函数只负责创造正常的实例对象，而将判断单一实例的任务交给一个代理类。下面是实现的方式。代理类的思想也是在构造函数中，返回一个新的构造函数。这里可以注意一下`args`和`...args`在使用时的区别。
+
+```javascript
+class CreateElement {
+  constructor(html, text) {
+    this.html = html
+    this.text = text
+    this.init()
+  }
+
+  init() {
+    const div = document.createElement('div')
+    div.innerText = this.html
+    document.body.appendChild(div)
+  }
+}
+
+const ProxySingleton = function (fn) {
+  let instance = null
+  return function (...args) {
+    if (!instance) {
+      instance = new fn(...args)
+    }
+    return instance
+  }
+}
+
+const ProxyCreateElement = ProxySingleton(CreateElement)
+
+const obj1 = new ProxyCreateElement('hello', 'world')
+const obj2 = new ProxyCreateElement('hi', 'ocean')
+console.log(obj1 === obj2)
+console.log(obj1.html, obj2.text)
+```
+
+## JavaScript中更实用的单例
+
+前面也提过，JS是一门class-free的语言。生成单例并不一定要死板地借助构造函数。
+
+### 全局变量
+
+最简单的办法就是使用对象字面量作为全局变量，但这会导致全局环境受到污染。可以使用命名空间（namespace）来减少这种污染，即将变量作为全局命名空间的属性。
+
+```javascript
+let namespace1 = {
+  a() {
+    alert('a')
+  },
+  b: function() {
+    alert('b')
+  }
+}
+```
+
+也可以动态地创建这种命名空间
+
+```javascript
+const myApp = {}
+
+myApp.constructor.prototype.namespace = function (name) {
+  let current = myApp
+  const args = name.split('.')
+  for (let arg of args) {
+    if (!current[arg]) {
+      current[arg] = {}
+    }
+    current = current[arg]
+  }
+}
+
+myApp.namespace('age')
+myApp.namespace('name.first')
+myApp.namespace('name.last')
+console.log(myApp)
+```
+
+### 惰性单例
+
+基于以上的学习，我们希望：
+
+1. 惰性地创建，即在click, keydown等事件处理程序中创建，而不是浏览器一加载完成就创建。
+2. 摆脱class的概念来创建。
+3. 实现单一职责，创建和判断单例的任务分开。
+
+```javascript
+const createElement = function (data) {
+  const div = document.createElement('div')
+  div.innerText = data
+  document.body.appendChild(div)
+  return div
+}
+
+const proxySingleton = function (fn) {
+  let instance = null
+  return function (data) {
+    return instance || (instance = fn(data))
+  }
+}
+
+const proxyCreateElement = proxySingleton(createElement)
+
+let div1, div2
+
+document.onclick = function () {
+  div1 = proxyCreateElement('hi')
+  div2 = proxyCreateElement('hello')
+}
+
+document.ondblclick = function () {
+  console.log(div1 === div2)
+}
+```
+
+
+

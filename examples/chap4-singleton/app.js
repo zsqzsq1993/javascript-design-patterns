@@ -151,4 +151,53 @@ function proxy() {
     console.log(obj1.html, obj2.text)
 }
 
-proxy()
+function createNameSpace() {
+    const myApp = {}
+
+    myApp.constructor.prototype.namespace = function (name) {
+        let current = myApp
+        const args = name.split('.')
+        for (let arg of args) {
+            if (!current[arg]) {
+                current[arg] = {}
+            }
+            current = current[arg]
+        }
+    }
+
+    myApp.namespace('age')
+    myApp.namespace('name.first')
+    myApp.namespace('name.last')
+    console.log(myApp)
+}
+
+function lazySingleton() {
+    const createElement = function (data) {
+        const div = document.createElement('div')
+        div.innerText = data
+        document.body.appendChild(div)
+        return div
+    }
+
+    const proxySingleton = function (fn) {
+        let instance = null
+        return function (data) {
+            return instance || (instance = fn(data))
+        }
+    }
+
+    const proxyCreateElement = proxySingleton(createElement)
+
+    let div1, div2
+
+    document.onclick = function () {
+        div1 = proxyCreateElement('hi')
+        div2 = proxyCreateElement('hello')
+    }
+
+    document.ondblclick = function () {
+        console.log(div1 === div2)
+    }
+}
+
+lazySingleton()
