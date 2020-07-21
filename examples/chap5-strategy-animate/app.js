@@ -33,6 +33,7 @@ const strategies = {
 }
 
 class Animate {
+
     constructor(dom, interval) {
         this.dom = dom
         this.startTime = 0
@@ -96,3 +97,5 @@ class Animate {
             return self.start('top', 0, 'sinEaseIn', 800)
     })
 })()
+
+export default Animate
