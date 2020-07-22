@@ -159,4 +159,47 @@ function flyweightUpload() {
     ])
 }
 
-flyweightUpload()
+function objectPool() {
+    const objectPoolFactory = (fn) => {
+        const objs = []
+
+        const create = (src) => {
+            let dom = null;
+            if (objs.length) {
+                dom = objs.shift()
+            } else {
+                dom = fn.call(this, src)
+            }
+            dom.src = src
+        }
+
+        const recover = (obj) => {
+            objs.push(obj)
+        }
+
+        return {
+            create,
+            recover
+        }
+    }
+
+    const framePoolFactory = objectPoolFactory((src) => {
+        const dom = document.createElement('iframe')
+        document.body.appendChild(dom)
+
+        dom.onload = () => {
+            framePoolFactory.recover(dom)
+            dom.onload = null
+        }
+
+        return dom
+    })
+
+    const dom1 = framePoolFactory.create('https://qq.com')
+    const dom2 = framePoolFactory.create('http://4399.com')
+    setTimeout(() => {
+        const dom3 = framePoolFactory.create('https://baidu.com')
+    }, 5000)
+}
+
+objectPool()
